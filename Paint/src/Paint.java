@@ -10,8 +10,10 @@ import static java.lang.Math.*;
 
 import java.util.Vector;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.LayoutManager;
 import java.awt.Shape;
 import java.awt.Point;
 import java.awt.Color;
@@ -23,17 +25,20 @@ import java.awt.geom.Rectangle2D;
 import java.awt.event.*;
 
 import javax.swing.event.*;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.AbstractAction;
 import javax.swing.JToolBar;
+import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 
 
 /* paint *******************************************************************/
 
-class Paint extends JFrame {
+class Paint extends JFrame implements MouseInputListener {
 	Vector<Shape> shapes = new Vector<Shape>();
 	Vector<Color> colors = new Vector<Color>();
 	Color currentColor = Color.BLACK;
@@ -68,8 +73,8 @@ class Paint extends JFrame {
 		public void mouseClicked(MouseEvent e) {}
 		public void mouseEntered(MouseEvent e) {}
 		public void mouseExited(MouseEvent e) {}
-		public void mousePressed(MouseEvent e) { o = e.getPoint(); }
-		public void mouseReleased(MouseEvent e) { shape = null; }
+		public void mousePressed(MouseEvent e) {if(e.getButton()==1) o = e.getPoint(); }
+		public void mouseReleased(MouseEvent e) {if(e.getButton()==1) shape = null; }
 		public void mouseDragged(MouseEvent e) {}
 		public void mouseMoved(MouseEvent e) {}
 		@Override
@@ -124,6 +129,8 @@ class Paint extends JFrame {
 
 	JPanel panel;
 	
+	Component menu;
+	
 	public Paint(String title) {
 		super(title);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -134,7 +141,25 @@ class Paint extends JFrame {
 			}
 			add(new ColorPicker("Color"));
 		}}, BorderLayout.NORTH);
-		add(panel = new JPanel() {	
+		add(panel = new JPanel() {
+			{
+			    this.setLayout(null);
+			    JButton button = new JButton("Small");
+			    button.setMaximumSize(new Dimension(25, 25));
+			    button.setBackground(Color.white);
+			    this.add(button);
+			    
+			    /*
+			    button = new JButton("Medium");
+			    button.setMaximumSize(new Dimension(50, 50));
+			    button.setBackground(Color.gray);
+			    this.add(button);
+			    
+			    button = new JButton("Large");
+			    button.setMaximumSize(new Dimension(100, 100));
+			    button.setBackground(Color.black);
+			    this.add(button);  */  
+			}
 			public void paintComponent(Graphics g) {
 				super.paintComponent(g);	
 				Graphics2D g2 = (Graphics2D)g;
@@ -154,6 +179,7 @@ class Paint extends JFrame {
 			}
 		});
 
+		panel.addMouseListener(this);
 		pack();
 		setVisible(true);
 	}
@@ -168,4 +194,45 @@ class Paint extends JFrame {
 			}
 		});
 	}
+
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {}
+	@Override
+	public void mouseEntered(MouseEvent arg0) {}
+	@Override
+	public void mouseExited(MouseEvent arg0) {}
+	@Override
+	public void mousePressed(MouseEvent e) {
+		if(e.getButton()!=3)
+			return;
+		System.out.println("Button "+e.getButton()+" pressed");
+		/*RoundButton button = new RoundButton(new ImageIcon("http://png-2.findicons.com/files/icons/1620/crystal_project/16/mini_circle.png"));
+		//button.setMaximumSize(new Dimension(16, 16));
+		button.setBounds(e.getX(),e.getY(),16,16);
+		panel.add(button);*/
+		JButton button = new JButton("Large");
+	    //button.setMaximumSize(new Dimension(100, 100));
+	    //button.setBackground(Color.black);
+		int height = 10;
+		int width = 10;
+	    button.setBounds(e.getX()-height/2, e.getY()-width/2, 10, 10);
+	    panel.add(menu =button);
+	    //pack();
+	    repaint();
+	    
+	}
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		System.out.println("r");
+		if(e.getButton()!=3)
+			return;
+		panel.remove(menu);
+	}
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		System.out.println("d");
+	}
+	@Override
+	public void mouseMoved(MouseEvent arg0) {}
 }
