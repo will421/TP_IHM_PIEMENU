@@ -9,7 +9,6 @@
 import static java.lang.Math.*;
 
 import java.util.Vector;
-
 import java.awt.BorderLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -18,13 +17,13 @@ import java.awt.Point;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.RenderingHints;
-
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
-
 import java.awt.event.*;
-import javax.swing.event.*;
 
+import javax.swing.event.*;
+import javax.swing.JColorChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.AbstractAction;
@@ -36,12 +35,28 @@ import javax.swing.SwingUtilities;
 
 class Paint extends JFrame {
 	Vector<Shape> shapes = new Vector<Shape>();
+	Vector<Color> colors = new Vector<Color>();
+	Color currentColor = Color.BLACK;
 
+	class ColorPicker extends AbstractAction
+	{
+		public ColorPicker(String name) {
+			super(name);
+		}
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			currentColor= JColorChooser.showDialog(null, "Choose a color", null);
+		}
+	}
+
+	
+	
 	class Tool extends AbstractAction
 	           implements MouseInputListener {
 	   Point o;
 		Shape shape;
-		public Tool(String name) { super(name); }
+		String name;
+		public Tool(String name) { super(name); this.name = name; }
 		public void actionPerformed(ActionEvent e) {
 			System.out.println("using tool " + this);
 			panel.removeMouseListener(tool);
@@ -57,6 +72,10 @@ class Paint extends JFrame {
 		public void mouseReleased(MouseEvent e) { shape = null; }
 		public void mouseDragged(MouseEvent e) {}
 		public void mouseMoved(MouseEvent e) {}
+		@Override
+			public String toString() {
+				return name;
+			}
 	}
 	
 	Tool tools[] = {
@@ -67,6 +86,7 @@ class Paint extends JFrame {
 					path = new Path2D.Double();
 					path.moveTo(o.getX(), o.getY());
 					shapes.add(shape = path);
+					colors.add(currentColor);
 				}
 				path.lineTo(e.getX(), e.getY());
 				panel.repaint();
@@ -78,9 +98,24 @@ class Paint extends JFrame {
 				if(rect == null) {
 					rect = new Rectangle2D.Double(o.getX(), o.getY(), 0, 0);
 					shapes.add(shape = rect);
+					colors.add(currentColor);
 				}
+				
 				rect.setRect(min(e.getX(), o.getX()), min(e.getY(), o.getY()),
 				             abs(e.getX()- o.getX()), abs(e.getY()- o.getY()));
+				panel.repaint();
+			}
+		},
+		new Tool("oval") {
+			public void mouseDragged(MouseEvent e){
+				Ellipse2D.Double ell = (Ellipse2D.Double)shape;
+				if(ell == null) {
+					ell = new Ellipse2D.Double(o.getX(), o.getY(), 0, 0);
+					shapes.add(shape = ell);
+					colors.add(currentColor);
+				}
+				ell.setFrame(min(e.getX(), o.getX()), min(e.getY(), o.getY()),
+			             abs(e.getX()- o.getX()), abs(e.getY()- o.getY()));
 				panel.repaint();
 			}
 		}
@@ -97,6 +132,7 @@ class Paint extends JFrame {
 			for(AbstractAction tool: tools) {
 				add(tool);
 			}
+			add(new ColorPicker("Color"));
 		}}, BorderLayout.NORTH);
 		add(panel = new JPanel() {	
 			public void paintComponent(Graphics g) {
@@ -108,9 +144,12 @@ class Paint extends JFrame {
 				g2.setColor(Color.WHITE);
 				g2.fillRect(0, 0, getWidth(), getHeight());
 				
-				g2.setColor(Color.BLACK);
+				//g2.setColor(color);
+				int i =0;
 				for(Shape shape: shapes) {
+					g2.setColor(colors.get(i));
 					g2.draw(shape);
+					i++;
 				}
 			}
 		});
